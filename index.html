@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Ganhos iFood</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Cores do iFood */
+    .ifood-bg { background-color: #EA1D2C; }
+    .ifood-text { color: #EA1D2C; }
+    .tab-active { background-color: #EA1D2C; color: white; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl">
+    <!-- Logo iFood -->
+    <div class="flex justify-center mb-4">
+      <img src="https://www.ifood.com.br/static/images/logo-ifood.png" alt="iFood Logo" class="h-12">
+    </div>
+    <h1 class="text-2xl font-bold text-center mb-4 ifood-text">Gerenciador de Ganhos iFood</h1>
+
+    <!-- Navegação por abas -->
+    <div class="flex mb-4">
+      <button onclick="showTab('earnings')" class="flex-1 p-2 border-b-2 tab-active" id="earningsTab">Ganhos/Quilometragem</button>
+      <button onclick="showTab('fuel')" class="flex-1 p-2 border-b-2" id="fuelTab">Combustível</button>
+      <button onclick="showTab('maintenance')" class="flex-1 p-2 border-b-2" id="maintenanceTab">Manutenção</button>
+      <button onclick="showTab('overview')" class="flex-1 p-2 border-b-2" id="overviewTab">Controle de Valores</button>
+    </div>
+
+    <!-- Aba de Ganhos/Quilometragem -->
+    <div id="earnings" class="tab-content">
+      <h2 class="text-lg font-semibold mb-2">Adicionar/Editar Ganhos</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input id="earningDate" type="date" class="p-2 border rounded">
+        <input id="earningAmount" type="number" placeholder="Valor Ganho (R$)" step="0.01" class="p-2 border rounded">
+        <input id="kilometers" type="number" placeholder="Quilometragem (km)" step="0.01" class="p-2 border rounded">
+        <input id="routes" type="number" placeholder="Rotas realizadas" step="1" class="p-2 border rounded">
+      </div>
+      <button onclick="addOrEditEarning()" class="w-full ifood-bg text-white p-2 rounded hover:bg-red-700 mb-4">Salvar</button>
+
+      <h2 class="text-lg font-semibold mb-2">Métricas Semanais (Seg - Dom)</h2>
+      <table class="w-full border-collapse mb-4">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2 text-left">Dia</th>
+            <th class="p-2 text-left">Ganhos (R$)</th>
+            <th class="p-2 text-left">Km</th>
+            <th class="p-2 text-left">Rotas</th>
+            <th class="p-2 text-left">Ação</th>
+          </tr>
+        </thead>
+        <tbody id="weeklyTableBody"></tbody>
+      </table>
+      <p class="font-semibold">Total Semanal: Ganhos: R$ <span id="weeklyEarnings">0.00</span> | Km: <span id="weeklyKm">0.00</span> | Rotas: <span id="weeklyRoutes">0</span></p>
+    </div>
+
+    <!-- Aba de Combustível -->
+    <div id="fuel" class="tab-content hidden">
+      <h2 class="text-lg font-semibold mb-2">Adicionar/Editar Combustível</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input id="fuelDate" type="date" class="p-2 border rounded">
+        <input id="fuelAmount" type="number" placeholder="Valor (R$)" step="0.01" class="p-2 border rounded">
+        <input id="fuelDescription" type="text" placeholder="Descrição (ex.: Posto X)" class="p-2 border rounded">
+      </div>
+      <button onclick="addOrEditFuel()" class="w-full ifood-bg text-white p-2 rounded hover:bg-red-700 mb-4">Salvar</button>
+
+      <h2 class="text-lg font-semibold mb-2">Histórico de Combustível</h2>
+      <table class="w-full border-collapse mb-4">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2 text-left">Data</th>
+            <th class="p-2 text-left">Valor (R$)</th>
+            <th class="p-2 text-left">Descrição</th>
+            <th class="p-2 text-left">Ação</th>
+          </tr>
+        </thead>
+        <tbody id="fuelTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Aba de Manutenção -->
+    <div id="maintenance" class="tab-content hidden">
+      <h2 class="text-lg font-semibold mb-2">Adicionar/Editar Manutenção</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input id="maintenanceDate" type="date" class="p-2 border rounded">
+        <input id="maintenanceAmount" type="number" placeholder="Valor (R$)" step="0.01" class="p-2 border rounded">
+        <input id="maintenanceDescription" type="text" placeholder="Descrição (ex.: Troca de óleo)" class="p-2 border rounded">
+      </div>
+      <button onclick="addOrEditMaintenance()" class="w-full ifood-bg text-white p-2 rounded hover:bg-red-700 mb-4">Salvar</button>
+
+      <h2 class="text-lg font-semibold mb-2">Histórico de Manutenção</h2>
+      <table class="w-full border-collapse mb-4">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2 text-left">Data</th>
+            <th class="p-2 text-left">Valor (R$)</th>
+            <th class="p-2 text-left">Descrição</th>
+            <th class="p-2 text-left">Ação</th>
+          </tr>
+        </thead>
+        <tbody id="maintenanceTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Aba de Controle de Valores -->
+    <div id="overview" class="tab-content hidden">
+      <h2 class="text-lg font-semibold mb-2">Controle de Valores</h2>
+      <select id="monthSelect" class="p-2 border rounded mb-4" onchange="updateOverview()">
+        <!-- Preenchido via JS -->
+      </select>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p class="font-semibold">Ganhos Totais: R$ <span id="overviewEarnings">0.00</span></p>
+          <p class="font-semibold">Total Quilometragem: <span id="overviewKm">0.00</span> km</p>
+          <p class="font-semibold">Total Rotas: <span id="overviewRoutes">0</span></p>
+        </div>
+        <div>
+          <p class="font-semibold">Gastos com Combustível: R$ <span id="overviewFuel">0.00</span></p>
+          <p class="font-semibold">Gastos com Manutenção: R$ <span id="overviewMaintenance">0.00</span></p>
+          <p class="font-semibold">Lucro Líquido: R$ <span id="overviewProfit">0.00</span></p>
+        </div>
+      </div>
+      <button onclick="exportOverview()" class="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600 mt-4">Exportar Dados Mensais</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Carregar dados do localStorage
+    let earnings = JSON.parse(localStorage.getItem('ifoodEarnings')) || [];
+    let fuel = JSON.parse(localStorage.getItem('ifoodFuel')) || [];
+    let maintenance = JSON.parse(localStorage.getItem('ifoodMaintenance')) || [];
+
+    // Função para mostrar/esconder abas
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+      document.querySelectorAll('.flex-1').forEach(btn => btn.classList.remove('tab-active'));
+      document.getElementById(`${tabId}Tab`).classList.add('tab-active');
+    }
+
+    // Função para adicionar ou editar ganhos
+    function addOrEditEarning() {
+      const date = document.getElementById('earningDate').value;
+      const amount = parseFloat(document.getElementById('earningAmount').value);
+      const kilometers = parseFloat(document.getElementById('kilometers').value);
+      const routes = parseInt(document.getElementById('routes').value);
+
+      // Validação
+      if (!date || isNaN(amount) || amount < 0 || isNaN(kilometers) || kilometers < 0 || isNaN(routes) || routes < 0) {
+        alert('Por favor, preencha data, ganhos, quilometragem e rotas com valores válidos.');
+        return;
+      }
+      const selectedDate = new Date(date);
+      if (selectedDate > new Date()) {
+        alert('Não é possível adicionar dados para datas futuras.');
+        return;
+      }
+
+      // Atualizar ou adicionar entrada
+      const existingIndex = earnings.findIndex(e => e.date === date);
+      const earning = { date, amount, kilometers, routes };
+      if (existingIndex !== -1) {
+        earnings[existingIndex] = earning;
+      } else {
+        earnings.push(earning);
+      }
+
+      // Salvar no localStorage
+      localStorage.setItem('ifoodEarnings', JSON.stringify(earnings));
+
+      // Limpar formulário
+      document.getElementById('earningDate').value = '';
+      document.getElementById('earningAmount').value = '';
+      document.getElementById('kilometers').value = '';
+      document.getElementById('routes').value = '';
+
+      // Atualizar interface
+      updateUI();
+    }
+
+    // Função para adicionar ou editar combustível
+    function addOrEditFuel() {
+      const date = document.getElementById('fuelDate').value;
+      const amount = parseFloat(document.getElementById('fuelAmount').value);
+      const description = document.getElementById('fuelDescription').value;
+
+      // Validação
+      if (!date || isNaN(amount) || amount < 0) {
+        alert('Por favor, preencha data e valor com valores válidos.');
+        return;
+      }
+      const selectedDate = new Date(date);
+      if (selectedDate > new Date()) {
+        alert('Não é possível adicionar dados para datas futuras.');
+        return;
+      }
+
+      // Atualizar ou adicionar entrada
+      const fuelEntry = { date, amount, description: description || 'Abastecimento' };
+      fuel.push(fuelEntry);
+
+      // Salvar no localStorage
+      localStorage.setItem('ifoodFuel', JSON.stringify(fuel));
+
+      // Limpar formulário
+      document.getElementById('fuelDate').value = '';
+      document.getElementById('fuelAmount').value = '';
+      document.getElementById('fuelDescription').value = '';
+
+      // Atualizar interface
+      updateUI();
+    }
+
+    // Função para adicionar ou editar manutenção
+    function addOrEditMaintenance() {
+      const date = document.getElementById('maintenanceDate').value;
+      const amount = parseFloat(document.getElementById('maintenanceAmount').value);
+      const description = document.getElementById('maintenanceDescription').value;
+
+      // Validação
+      if (!date || isNaN(amount) || amount < 0 || !description) {
+        alert('Por favor, preencha data, valor e descrição com valores válidos.');
+        return;
+      }
+      const selectedDate = new Date(date);
+      if (selectedDate > new Date()) {
+        alert('Não é possível adicionar dados para datas futuras.');
+        return;
+      }
+
+      // Atualizar ou adicionar entrada
+      const existingIndex = maintenance.findIndex(m => m.date === date && m.description === description);
+      const maint = { date, amount, description };
+      if (existingIndex !== -1) {
+        maintenance[existingIndex] = maint;
+      } else {
+        maintenance.push(maint);
+      }
+
+      // Salvar no localStorage
+      localStorage.setItem('ifoodMaintenance', JSON.stringify(maintenance));
+
+      // Limpar formulário
+      document.getElementById('maintenanceDate').value = '';
+      document.getElementById('maintenanceAmount').value = '';
+      document.getElementById('maintenanceDescription').value = '';
+
+      // Atualizar interface
+      updateUI();
+    }
+
+    // Função para obter o início e fim da semana atual (segunda a domingo)
+    function getWeekRange() {
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diffToMonday = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - diffToMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return { monday, sunday };
+    }
+
+    // Função para atualizar métricas semanais
+    function updateWeeklyMetrics() {
+      const { monday, sunday } = getWeekRange();
+      const tableBody = document.getElementById('weeklyTableBody');
+      tableBody.innerHTML = '';
+
+      let totalEarnings = 0, totalKm = 0, totalRoutes = 0;
+      const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(monday);
+        currentDate.setDate(monday.getDate() + i);
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const earning = earnings.find(e => e.date === dateStr) || { amount: 0, kilometers: 0, routes: 0 };
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="p-2">${days[i]} (${currentDate.toLocaleDateString('pt-BR')})</td>
+          <td class="p-2">R$ ${earning.amount.toFixed(2)}</td>
+          <td class="p-2">${earning.kilometers.toFixed(2)}</td>
+          <td class="p-2">${earning.routes || 0}</td>
+          <td class="p-2">
+            <button onclick="editEarning('${dateStr}')" class="text-blue-500 hover:underline">Editar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+        totalEarnings += earning.amount;
+        totalKm += earning.kilometers;
+        totalRoutes += earning.routes || 0;
+      }
+
+      document.getElementById('weeklyEarnings').textContent = totalEarnings.toFixed(2);
+      document.getElementById('weeklyKm').textContent = totalKm.toFixed(2);
+      document.getElementById('weeklyRoutes').textContent = totalRoutes;
+    }
+
+    // Função para preencher o seletor de meses
+    function populateMonthSelect() {
+      const monthSelect = document.getElementById('monthSelect');
+      const months = [...new Set(earnings.map(e => e.date.slice(0, 7)))].sort();
+      monthSelect.innerHTML = '<option value="">Selecione um mês</option>';
+      months.forEach(month => {
+        const option = document.createElement('option');
+        option.value = month;
+        option.textContent = new Date(`${month}-01`).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        monthSelect.appendChild(option);
+      });
+    }
+
+    // Função para atualizar histórico de combustível
+    function updateFuelTable() {
+      const tableBody = document.getElementById('fuelTableBody');
+      tableBody.innerHTML = '';
+
+      fuel.forEach(f => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="p-2">${new Date(f.date).toLocaleDateString('pt-BR')}</td>
+          <td class="p-2">R$ ${f.amount.toFixed(2)}</td>
+          <td class="p-2">${f.description}</td>
+          <td class="p-2">
+            <button onclick="editFuel('${f.date}', '${f.description}')" class="text-blue-500 hover:underline">Editar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Função para atualizar histórico de manutenção
+    function updateMaintenanceTable() {
+      const tableBody = document.getElementById('maintenanceTableBody');
+      tableBody.innerHTML = '';
+
+      maintenance.forEach(m => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="p-2">${new Date(m.date).toLocaleDateString('pt-BR')}</td>
+          <td class="p-2">R$ ${m.amount.toFixed(2)}</td>
+          <td class="p-2">${m.description}</td>
+          <td class="p-2">
+            <button onclick="editMaintenance('${m.date}', '${m.description}')" class="text-blue-500 hover:underline">Editar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Função para atualizar controle de valores
+    function updateOverview() {
+      const selectedMonth = document.getElementById('monthSelect').value;
+      if (!selectedMonth) {
+        document.getElementById('overviewEarnings').textContent = '0.00';
+        document.getElementById('overviewKm').textContent = '0.00';
+        document.getElementById('overviewRoutes').textContent = '0';
+        document.getElementById('overviewFuel').textContent = '0.00';
+        document.getElementById('overviewMaintenance').textContent = '0.00';
+        document.getElementById('overviewProfit').textContent = '0.00';
+        return;
+      }
+
+      const monthlyEarnings = earnings.filter(e => e.date.startsWith(selectedMonth));
+      const monthlyFuel = fuel.filter(f => f.date.startsWith(selectedMonth));
+      const monthlyMaintenance = maintenance.filter(m => m.date.startsWith(selectedMonth));
+
+      const totalEarnings = monthlyEarnings.reduce((sum, e) => sum + e.amount, 0);
+      const totalKm = monthlyEarnings.reduce((sum, e) => sum + e.kilometers, 0);
+      const totalRoutes = monthlyEarnings.reduce((sum, e) => sum + (e.routes || 0), 0);
+      const totalFuel = monthlyFuel.reduce((sum, f) => sum + f.amount, 0);
+      const totalMaintenance = monthlyMaintenance.reduce((sum, m) => sum + m.amount, 0);
+      const profit = totalEarnings - totalFuel - totalMaintenance;
+
+      document.getElementById('overviewEarnings').textContent = totalEarnings.toFixed(2);
+      document.getElementById('overviewKm').textContent = totalKm.toFixed(2);
+      document.getElementById('overviewRoutes').textContent = totalRoutes;
+      document.getElementById('overviewFuel').textContent = totalFuel.toFixed(2);
+      document.getElementById('overviewMaintenance').textContent = totalMaintenance.toFixed(2);
+      document.getElementById('overviewProfit').textContent = profit.toFixed(2);
+    }
+
+    // Função para editar ganhos
+    function editEarning(date) {
+      const earning = earnings.find(e => e.date === date);
+      if (earning) {
+        document.getElementById('earningDate').value = earning.date;
+        document.getElementById('earningAmount').value = earning.amount;
+        document.getElementById('kilometers').value = earning.kilometers;
+        document.getElementById('routes').value = earning.routes || '';
+        showTab('earnings');
+      }
+    }
+
+    // Função para editar combustível
+    function editFuel(date, description) {
+      const fuelEntry = fuel.find(f => f.date === date && f.description === description);
+      if (fuelEntry) {
+        document.getElementById('fuelDate').value = fuelEntry.date;
+        document.getElementById('fuelAmount').value = fuelEntry.amount;
+        document.getElementById('fuelDescription').value = fuelEntry.description;
+        showTab('fuel');
+      }
+    }
+
+    // Função para editar manutenção
+    function editMaintenance(date, description) {
+      const maint = maintenance.find(m => m.date === date && m.description === description);
+      if (maint) {
+        document.getElementById('maintenanceDate').value = maint.date;
+        document.getElementById('maintenanceAmount').value = maint.amount;
+        document.getElementById('maintenanceDescription').value = maint.description;
+        showTab('maintenance');
+      }
+    }
+
+    // Função para exportar dados mensais
+    function exportOverview() {
+      const selectedMonth = document.getElementById('monthSelect').value;
+      if (!selectedMonth) {
+        alert('Selecione um mês para exportar.');
+        return;
+      }
+
+      const monthlyEarnings = earnings.filter(e => e.date.startsWith(selectedMonth));
+      const monthlyFuel = fuel.filter(f => f.date.startsWith(selectedMonth));
+      const monthlyMaintenance = maintenance.filter(m => m.date.startsWith(selectedMonth));
+      const text = [
+        `Resumo Mensal (${selectedMonth}):`,
+        ...monthlyEarnings.map(e => `${e.date}: Ganhos: R$ ${e.amount.toFixed(2)}, Km: ${e.kilometers.toFixed(2)}, Rotas: ${e.routes || 0}`),
+        ...monthlyFuel.map(f => `${f.date}: Combustível: R$ ${f.amount.toFixed(2)}, Descrição: ${f.description}`),
+        ...monthlyMaintenance.map(m => `${m.date}: Manutenção: R$ ${m.amount.toFixed(2)}, Descrição: ${m.description}`)
+      ].join('\n');
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Dados mensais copiados para a área de transferência!');
+      });
+    }
+
+    // Função para atualizar toda a interface
+    function updateUI() {
+      updateWeeklyMetrics();
+      populateMonthSelect();
+      updateFuelTable();
+      updateMaintenanceTable();
+      updateOverview();
+    }
+
+    // Inicializar interface
+    updateUI();
+  </script>
+</body>
+</html>
